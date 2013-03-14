@@ -1,20 +1,10 @@
-# NLP Programming Assignment #3
-# NaiveBayes
-# 2012
-
-#
-# The area for you to implement is marked with TODO!
-# Generally, you should not need to touch things *not* marked TODO
-#
-# Remember that when you submit your code, it is not run from the command line 
-# and your main() will *not* be run. To be safest, restrict your changes to
-# addExample() and classify() and anything you further invoke from there.
-#
-
+# NaiveBayes 2 class prediction
+# Predict Tweet as Politics or Sports
+# Problem Statement: http://events.csa.iisc.ernet.in/opendays2013/twitminer/challenge.html
+__author__="vsubhashini"
 
 import sys
 import getopt
-import os
 import math
 
 class NaiveBayes:
@@ -45,9 +35,6 @@ class NaiveBayes:
     self.negDict={};
     self.vocabulary=set();
 
-  #############################################################################
-  # TODO TODO TODO TODO TODO 
-  
   def wordCount(self, dictionary):
     """ My method 
       to count the total words in each class (Politics and Sports dictionaries)
@@ -108,10 +95,6 @@ class NaiveBayes:
       self.vocabulary.add(word); 
     pass
       
-
-  # TODO TODO TODO TODO TODO 
-  #############################################################################
-  
   def readFile(self, fileName):
     """
      * Code for reading a file.  you probably don't want to modify anything here, 
