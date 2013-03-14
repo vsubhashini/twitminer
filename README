@@ -1,0 +1,45 @@
+
+The NaiveBayesTweetPredict.py predicts twitter tweets as either "Politics" or "Sports". It includes a method to perform 10-fold cro validation if argument is a single input training file. If argument includes training and testfile, the output <tweetid PredictedClass> is saved in outputPrediction.txt file.
+Also considers stopwords if invoked with -f option.
+
+Performance:
+1. Prediction accuracy without stopwords (on training.txt) = 94.62%
+2. Prediction accuracy with stopwords (on training.txt) = 94.88%
+
+Usage:
+python NaiveBayesTweetPredict.py [-f] trainingfile [testfile]
+
+Examples:
+
+$python NaiveBayesTweetPredict.py training.txt
+Output:
+[INFO]  Fold 0 Accuracy: 0.958652
+[INFO]  Fold 1 Accuracy: 0.941807
+[INFO]  Fold 2 Accuracy: 0.944870
+[INFO]  Fold 3 Accuracy: 0.955590
+[INFO]  Fold 4 Accuracy: 0.949464
+[INFO]  Fold 5 Accuracy: 0.950995
+[INFO]  Fold 6 Accuracy: 0.932619
+[INFO]  Fold 7 Accuracy: 0.937213
+[INFO]  Fold 8 Accuracy: 0.947933
+[INFO]  Fold 9 Accuracy: 0.943338
+[INFO]  Accuracy: 0.946248
+
+$python NaiveBayesTweetPredict.py training.txt Training_Validation_datasets/validation.txt
+Output:
+Predictions in outputPredictions.txt
+
+Using the stopword list:
+$python NaiveBayesTweetPredict.py -f training.txt
+Output:
+[INFO]  Fold 0 Accuracy: 0.947933
+[INFO]  Fold 1 Accuracy: 0.946401
+[INFO]  Fold 2 Accuracy: 0.946401
+[INFO]  Fold 3 Accuracy: 0.955590
+[INFO]  Fold 4 Accuracy: 0.954058
+[INFO]  Fold 5 Accuracy: 0.950995
+[INFO]  Fold 6 Accuracy: 0.943338
+[INFO]  Fold 7 Accuracy: 0.946401
+[INFO]  Fold 8 Accuracy: 0.946401
+[INFO]  Fold 9 Accuracy: 0.950995
+[INFO]  Accuracy: 0.948851
