@@ -27,11 +27,13 @@ class NaiveBayes:
 
   class Example:
     """Represents a document with a label. klass is 'Politics' or 'Sports' by convention.
-       words is a list of strings.
+       words is a list of strings in the tweet message.
+       tweetid is the tweet id
     """
     def __init__(self):
       self.klass = ''
       self.words = []
+      self.tweetid= ''
 
 
   def __init__(self):
@@ -75,6 +77,7 @@ class NaiveBayes:
       	negwordCount=0;
       negWordProb = (negwordCount+1.0)/(negCount + vocabLen);
       negSentenceProb += math.log(negWordProb);
+    #print (words, negSentenceProb, posSentenceProb);
     if negSentenceProb>posSentenceProb:
       return 'Sports'
     return 'Politics'
@@ -90,16 +93,18 @@ class NaiveBayes:
      * Returns nothing
     """
     for word in words:
-      if klass is 'Politics':
+      if klass=='Politics':
         count=self.posDict.get(word);
 	if count is None:
 	  count=0;
 	self.posDict[word]=count+1;
-      elif klass is 'Sports':
+        #print(klass, word);
+      elif klass=='Sports':
         count=self.negDict.get(word);
 	if count is None:
 	  count=0;
 	self.negDict[word]=count+1;
+        #print(klass, word);
       self.vocabulary.add(word); 
     pass
       
@@ -127,8 +132,8 @@ class NaiveBayes:
      *   Leaves out first value corresponding to id if test sample
     """
     if test:
-      return ''.join(tweetSample[1:])
-    return ''.join(tweetSample[2:])
+      return (tweetSample[1:])
+    return (tweetSample[2:])
 
   
   def segmentWords(self, s):
@@ -147,6 +152,7 @@ class NaiveBayes:
         example = self.Example()
         example.words = self.readTweet(tweetsample, False)
         example.klass = tweetsample[1]
+        example.tweetid = tweetsample[0]
         split.train.append(example)
     return split
 
@@ -156,34 +162,6 @@ class NaiveBayes:
       if self.FILTER_STOP_WORDS:
         words =  self.filterStopWords(words)
       self.addExample(example.klass, words)
-
-#  def crossValidationSplits(self, trainDir):
-#    """Returns a list of TrainSplits corresponding to the cross validation splits."""
-#    splits = [] 
-#    posTrainFileNames = os.listdir('%s/pos/' % trainDir)
-#    negTrainFileNames = os.listdir('%s/neg/' % trainDir)
-#    #for fileName in trainFileNames:
-#    for fold in range(0, self.numFolds):
-#      split = self.TrainSplit()
-#      for fileName in posTrainFileNames:
-#        example = self.Example()
-#        example.words = self.readFile('%s/pos/%s' % (trainDir, fileName))
-#        example.klass = 'pos'
-#        if fileName[2] == str(fold):
-#          split.test.append(example)
-#        else:
-#          split.train.append(example)
-#      for fileName in negTrainFileNames:
-#        example = self.Example()
-#        example.words = self.readFile('%s/neg/%s' % (trainDir, fileName))
-#        example.klass = 'neg'
-#        if fileName[2] == str(fold):
-#          split.test.append(example)
-#        else:
-#          split.train.append(example)
-#      splits.append(split)
-#    return splits
-
 
   def test(self, split):
     """Returns a list of labels for split.test."""
@@ -198,14 +176,43 @@ class NaiveBayes:
   
   def buildSplits(self, args):
     """Builds the splits for training/testing"""
-    trainData = [] 
-    testData = []
     splits = []
     trainFile = args[0]
     if len(args) == 2:
       testFile = args[1]
     if len(args) < 1: 
-      print '[Usage] trainFile testFile'
+      print '[Usage] trainFile [testFile]'
+
+    split = self.TrainSplit()
+    with open(trainFile) as fid:
+      for line in fid:
+        tweetsample = line.split()
+        example = self.Example()
+        example.tweetid = tweetsample[0]
+        example.klass = tweetsample[1]
+        example.words = self.readTweet(tweetsample, False)
+        split.train.append(example)
+    with open(testFile) as fid:
+      for line in fid:
+        tweetsample = line.split()
+        example = self.Example()
+        example.tweetid = tweetsample[0]
+        #example.klass = tweetsample[1] #comment
+        example.words = self.readTweet(tweetsample, True)
+        #example.words = self.readTweet(tweetsample, False)
+        split.test.append(example)
+    splits.append(split)
+    return splits
+
+
+  def buildCrossValidationSplits(self, args):
+    """Builds the splits for training/testing"""
+    splits = []
+    trainFile = args[0]
+    if len(args) == 2:
+      testFile = args[1]
+    if len(args) < 1: 
+      print '[Usage] trainFile [testFile] %Input just trainfile for 10fold cross validation'
 
     """Create splits to perform n-fold cross validation"""
     fid = open(trainFile);
@@ -223,12 +230,14 @@ class NaiveBayes:
             example = self.Example()
             example.words = self.readTweet(tweetsample, False)
             example.klass = tweetsample[1]
+            example.tweetid = tweetsample[0]
             split.test.append(example)
           else:
             tweetsample = line.split()
             example = self.Example()
             example.words = self.readTweet(tweetsample, False)
             example.klass = tweetsample[1]
+            example.tweetid = tweetsample[0]
             split.train.append(example)
           lineCounter+=1;
       splits.append(split)
@@ -250,7 +259,14 @@ def main():
   if ('-f','') in options:
     nb.FILTER_STOP_WORDS = True
   
-  splits = nb.buildSplits(args)
+  testing=False
+  if len(args)==1:
+    splits = nb.buildCrossValidationSplits(args)
+  elif len(args)==2:
+    splits = nb.buildSplits(args)
+    testing=True
+  else:
+    print '[Usage] trainFile testFile'
   avgAccuracy = 0.0
   fold = 0
   for split in splits:
@@ -262,20 +278,30 @@ def main():
         words =  classifier.filterStopWords(words)
       classifier.addExample(example.klass, words)
   
-    for example in split.test:
-      words = example.words
-      if nb.FILTER_STOP_WORDS:
-        words =  classifier.filterStopWords(words)
-      guess = classifier.classify(words)
-      if example.klass == guess:
-        accuracy += 1.0
+    with open('outputPredictions.txt', 'w+') as opfid:
+      for example in split.test:
+        words = example.words
+        if nb.FILTER_STOP_WORDS:
+          words =  classifier.filterStopWords(words)
+        guess = classifier.classify(words)
+        if example.klass!=None:
+          if example.klass == guess:
+            accuracy += 1.0
+        opfid.write(example.tweetid);
+	opfid.write(" ");
+	opfid.write(guess);
+	opfid.write("\n");
 
     accuracy = accuracy / len(split.test)
     avgAccuracy += accuracy
-    print '[INFO]\tFold %d Accuracy: %f' % (fold, accuracy) 
+    if not testing:
+      print '[INFO]\tFold %d Accuracy: %f' % (fold, accuracy) 
     fold += 1
   avgAccuracy = avgAccuracy / fold
-  print '[INFO]\tAccuracy: %f' % avgAccuracy
+  if not testing:
+    print '[INFO]\tAccuracy: %f' % avgAccuracy
+  else:
+    print 'Predictions in outputPredictions.txt';
 
 if __name__ == "__main__":
     main()
